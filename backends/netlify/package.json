@@ -1,0 +1,7 @@
+{
+  "name": "home-gym-sync-netlify",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Netlify Function sync backend (Netlify Blobs). Run: npm install @netlify/blobs"
+}

@@ -1,0 +1,10 @@
+name = "home-gym-sync"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# KV namespace for storing sync buckets.
+# Create it with:  npx wrangler kv namespace create SYNC_KV
+# then paste the returned id below (replace PASTE_KV_ID_HERE).
+[[kv_namespaces]]
+binding = "SYNC_KV"
+id = "PASTE_KV_ID_HERE"

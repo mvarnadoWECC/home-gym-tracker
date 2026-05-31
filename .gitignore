@@ -1,0 +1,12 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+
+# Node (only if you later add a dev server)
+node_modules/
+npm-debug.log*
+
+# Claude Code local settings (keep CLAUDE.md tracked; ignore local-only state)
+.claude/settings.local.json

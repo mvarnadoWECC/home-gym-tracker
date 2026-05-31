@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home Gym — Track &amp; Build</title>
+<meta name="theme-color" content="#15171a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Home Gym">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="kicker">Rogue Rack · 4-Day Build</div>
+    <h1>Track <span>&amp; Build</span></h1>
+    <p class="sub">Pick a workout, warm up, log every set. Numbers save to this page and prefill next time so you can see your progress and know when to add weight.</p>
+  </div>
+</header>
+
+<div class="sticky-header">
+  <div class="picker"><div class="picker-inner" id="picker"></div></div>
+  <div id="weekBar"></div>
+</div>
+
+<div class="wrap">
+  <div class="status" id="status">Checking saved data…</div>
+
+  <!-- WARMUP -->
+  <details class="warm" id="warmBox" open>
+    <summary><span class="warm-title" id="warmTitle">Dynamic Warm-Up</span><span class="chev">+</span></summary>
+    <div class="warm-body" id="warmBody"></div>
+  </details>
+
+  <!-- SESSION -->
+  <section>
+    <div class="sec-label" id="dayLabel">Workout</div>
+    <h2 id="dayName">—</h2>
+    <p class="lead" id="dayLead"></p>
+
+    <div class="meta">
+      <div class="field"><label>Date</label><input type="date" id="sessDate"></div>
+      <div class="field"><label>Bodyweight (opt.)</label><input type="number" inputmode="decimal" id="sessBW" placeholder="lb"></div>
+    </div>
+
+    <div id="exContainer"></div>
+
+    <div class="row-btns">
+      <button class="btn block" id="saveSession">Save This Workout</button>
+    </div>
+    <div class="note ok" id="saveNote" style="text-align:center;margin-bottom:6px;">Saved ✓</div>
+  </section>
+
+  <!-- PROGRESS -->
+  <section id="progressSec">
+    <div class="sec-label">Strength over time</div>
+    <h2>Progress</h2>
+    <p class="lead">Estimated 1-rep max for your main lifts, pulled from your logged sets (benchmark + program combined). Pick a lift to see the trend.</p>
+    <div class="movechips" id="moveChips"></div>
+    <div class="card" id="chartCard">
+      <div class="chart-stats" id="chartStats"></div>
+      <div id="chartArea"></div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="historySec">
+    <div class="sec-label">Your log</div>
+    <h2>History</h2>
+    <p class="lead" id="histLead">Every saved workout, newest first. Tap one to see all your sets.</p>
+    <div id="histContainer"></div>
+  </section>
+
+  <!-- SYNC -->
+  <section id="syncSec">
+    <div class="sec-label">Phone ↔ Computer</div>
+    <h2>Sync</h2>
+    <p class="lead">Link your devices with a shared code. Log on your phone, then <b>Pull</b> on your computer (or turn on auto-sync). Your code is the only key — keep it private.</p>
+
+    <div class="status" id="syncStatus">Checking…</div>
+
+    <div class="meta">
+      <div class="field" style="grid-column:1 / -1;">
+        <label>Sync code (same on every device)</label>
+        <input type="text" id="syncCode" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. K7P2QX9M">
+      </div>
+    </div>
+
+    <div class="row-btns">
+      <button class="btn ghost" id="syncGen">Generate Code</button>
+      <button class="btn" id="syncPush">Sync Now</button>
+      <button class="btn ghost" id="syncPull">Pull</button>
+    </div>
+    <label class="toggle"><input type="checkbox" id="syncAuto"> <span>Auto-sync after each saved workout</span></label>
+    <div class="note" id="syncNote" style="margin-top:6px;"></div>
+
+    <div class="setup-box" id="syncSetup">
+      <strong>One-time setup</strong>
+      <p>Sync needs a tiny free backend. The <code>backends/</code> folder has three you can deploy with an account you already have — <b>Deno Deploy</b> or <b>Netlify</b> (both sign in with GitHub), or Cloudflare. Deploy one, paste its URL into <code>js/config.js</code>, and this panel switches on. See <code>backends/README.md</code> — Claude Code can do the deploy for you.</p>
+    </div>
+  </section>
+
+  <!-- BACKUP -->
+  <section>
+    <div class="sec-label">Safety net</div>
+    <h2>Backup</h2>
+    <p class="lead">Storage can occasionally fail. Tap <b>Copy backup</b> anytime to grab all your data as text — paste it somewhere safe (Notes, email). To restore on a new device, paste it below and tap Restore.</p>
+    <div class="row-btns">
+      <button class="btn ghost" id="copyBtn">Copy Backup</button>
+      <button class="btn ghost" id="restoreBtn">Restore</button>
+      <span class="note" id="backupNote"></span>
+    </div>
+    <textarea id="backupBox" placeholder="Backup data appears here / paste here to restore…"></textarea>
+  </section>
+
+  <footer>
+    <div>Run the Benchmark first to set your numbers · then rotate Upper A → Lower A → Upper B → Lower B.</div>
+    <p class="disc">General fitness guidance, not medical advice. Warm up, keep good form, use your safety bars when training solo.</p>
+  </footer>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/config.js"></script>
+<script src="js/sync.js"></script>
+</body>
+</html>
