@@ -83,6 +83,27 @@
   .btn-sub{background:none;border:1px solid var(--line);color:var(--txt-dim);border-radius:6px;padding:3px 8px;font-family:'Barlow Semi Condensed';font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:.68rem;cursor:pointer;white-space:nowrap;flex:0 0 auto;}
   .btn-sub.active{border-color:var(--amber);color:var(--amber);}
 
+  /* session duration */
+  .sess-dur{display:flex;align-items:center;gap:7px;margin:-4px 0 16px;font-size:.78rem;}
+  .sess-dur-label{font-family:'Barlow Semi Condensed';font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:.62rem;color:var(--txt-dim);}
+  #sessDurVal{color:var(--amber);font-family:'Barlow Semi Condensed';font-weight:700;font-size:.88rem;}
+
+  /* warm-up set calculator */
+  .wu-details{margin-top:8px;}
+  .wu-details summary{font-family:'Barlow Semi Condensed';font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:.68rem;color:var(--txt-dim);cursor:pointer;list-style:none;padding:4px 0;}
+  .wu-details summary::-webkit-details-marker{display:none;}
+  .wu-details[open] summary{color:var(--amber);}
+  .wu-sets{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0 4px;}
+  .wu-set{background:var(--steel-900);border:1px solid var(--line);border-radius:6px;padding:5px 10px;font-family:'Barlow Semi Condensed';font-weight:700;font-size:.85rem;color:var(--txt);}
+  .wu-set small{color:var(--txt-dim);font-size:.75rem;}
+
+  /* per-exercise history */
+  .exhist-row{display:flex;align-items:baseline;gap:10px;padding:8px 0;border-bottom:1px dashed var(--steel-600);font-size:.88rem;}
+  .exhist-row:last-child{border:none;}
+  .exhist-date{font-family:'Barlow Semi Condensed';font-weight:600;color:var(--txt-dim);white-space:nowrap;min-width:58px;}
+  .exhist-sets{flex:1;font-family:'Barlow Semi Condensed';font-weight:600;color:var(--txt);}
+  .exhist-e1rm{font-size:.78rem;color:var(--amber);font-family:'Barlow Semi Condensed';font-weight:700;white-space:nowrap;}
+
   /* benchmark locked result */
   .bm-result{display:flex;align-items:baseline;gap:12px;padding:11px 13px;background:var(--steel-900);border:1px solid var(--line);border-radius:8px;margin-top:6px;}
   .bm-val{font-family:'Anton';font-size:1.45rem;color:var(--amber);line-height:1;}

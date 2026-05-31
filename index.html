@@ -51,6 +51,7 @@
       <div class="field"><label>Date</label><input type="date" id="sessDate"></div>
       <div class="field"><label>Bodyweight (opt.)</label><input type="number" inputmode="decimal" id="sessBW" placeholder="lb"></div>
     </div>
+    <div class="sess-dur"><span class="sess-dur-label">Duration</span><span id="sessDurVal">0 min</span></div>
 
     <div id="exContainer"></div>
 
@@ -69,6 +70,10 @@
     <div class="card" id="chartCard">
       <div class="chart-stats" id="chartStats"></div>
       <div id="chartArea"></div>
+    </div>
+    <div class="card" id="exHistCard" style="display:none">
+      <div class="sec-label" style="margin-bottom:8px;">All logged sessions</div>
+      <div id="exHistList"></div>
     </div>
     <div class="card" id="bwCard" style="display:none">
       <div class="sec-label" style="margin-bottom:6px;">Bodyweight trend</div>

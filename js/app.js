@@ -1,4 +1,4 @@
-(function(){
+﻿(function(){
 "use strict";
 
 /* ---------------- DATA ---------------- */
@@ -157,6 +157,7 @@ var currentDay="benchmark";
 var currentMove="fsq";
 var restEnd=0,restTotal=90,restTick=null;
 var benchUnlocked={};
+var sessStart=0,sessTimerTick=null;
 
 function hasWS(){ return (typeof window!=="undefined" && window.storage && typeof window.storage.get==="function"); }
 
@@ -201,7 +202,56 @@ function est1RM(w,r){ if(!w||!r) return 0; return w*(1+r/30); }
 function startW(w,r){ var e=est1RM(w,r); return e?roundTo5(e*0.80):0; }
 function todayStr(){ var d=new Date(); var m=("0"+(d.getMonth()+1)).slice(-2); var day=("0"+d.getDate()).slice(-2); return d.getFullYear()+"-"+m+"-"+day; }
 function fmtDate(s){ if(!s) return ""; var p=s.split("-"); if(p.length!==3) return s; return p[1]+"/"+p[2]+"/"+p[0].slice(2); }
+function fmtDur(secs){ var m=Math.floor(secs/60); return m+" min"; }
 function lastSessionFor(key){ for(var i=sessions.length-1;i>=0;i--){ if(sessions[i].day===key) return sessions[i]; } return null; }
+
+function startSessTimer(){
+  sessStart=Date.now();
+  clearInterval(sessTimerTick);
+  var el=document.getElementById('sessDurVal');
+  if(el) el.textContent='0 min';
+  sessTimerTick=setInterval(function(){
+    var el=document.getElementById('sessDurVal');
+    if(el) el.textContent=fmtDur(Math.floor((Date.now()-sessStart)/1000));
+  },30000);
+}
+
+function warmupSets(w){
+  var sets=[];
+  if(w<65) return sets;
+  var p50=roundTo5(w*0.5),p70=roundTo5(w*0.7),p85=roundTo5(w*0.85);
+  if(p50>=45&&p50<w) sets.push({w:p50,r:5});
+  if(p70>p50&&p70<w) sets.push({w:p70,r:3});
+  if(p85>p70&&p85<w) sets.push({w:p85,r:1});
+  return sets;
+}
+
+function renderExHist(move){
+  var card=document.getElementById('exHistCard');
+  var list=document.getElementById('exHistList');
+  if(!card||!list) return;
+  var rows=[];
+  var sorted=sessions.slice().sort(function(a,b){return (b.date+b.id).localeCompare(a.date+a.id);});
+  sorted.forEach(function(sess){
+    var allSets=[];
+    move.ids.forEach(function(id){
+      var arr=sess.logs&&sess.logs[id]; if(!arr) return;
+      arr.forEach(function(s){if(s.w||s.r) allSets.push(s);});
+    });
+    if(!allSets.length) return;
+    var parts=allSets.map(function(s){return (s.w?s.w+'×':'')+(s.r||'');});
+    var e=0;
+    allSets.forEach(function(s){var v=est1RM(parseFloat(s.w)||0,parseInt(s.r,10)||0);if(v>e)e=v;});
+    rows.push('<div class="exhist-row">'+
+      '<span class="exhist-date">'+fmtDate(sess.date)+'</span>'+
+      '<span class="exhist-sets">'+parts.join(', ')+'</span>'+
+      (e>0?'<span class="exhist-e1rm">'+Math.round(e)+' lb</span>':'')+
+      '</div>');
+  });
+  if(!rows.length){card.style.display='none';return;}
+  card.style.display='';
+  list.innerHTML=rows.join('');
+}
 
 /* ---------------- SUBSTITUTION + PERIODIZATION HELPERS ---------------- */
 function getChain(ex){
@@ -446,6 +496,7 @@ function renderProgress(){
     area.innerHTML=buildChartSVG(pts);
   }
   renderBWChart();
+  renderExHist(move);
 }
 
 function renderBWChart(){
@@ -542,6 +593,7 @@ function selectDay(key){
   currentDay=key;
   var btns=picker.querySelectorAll(".dbtn");
   btns.forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-key")===key); });
+  startSessTimer();
   renderDay();
 }
 
@@ -696,7 +748,8 @@ function renderDay(){
         "<div class='ex-last'>"+lastTxt+"</div>"+
         rows+
         "<button class='btn-add-set' data-ex='"+ex.id+"'>+ Add Set</button>"+
-        (ex.calc?"<div class='calc' id='calc_"+ex.id+"'></div>":"");
+        (ex.calc?"<div class='calc' id='calc_"+ex.id+"'></div>":"")+
+        (ex.type==='main'&&ex.weighted?"<div class='wucalc' id='wucalc_"+ex.id+"'></div>":"");
     }
     cont.appendChild(box);
   });
@@ -709,18 +762,41 @@ function renderDay(){
 
 function updateCalc(){
   var d=dayByKey(currentDay);
-  if(!d.isBench) return;
+  if(d.isBench){
+    d.ex.forEach(function(ex){
+      if(!ex.calc) return;
+      var el=document.getElementById("calc_"+ex.id);
+      if(!el) return;
+      var wEl=document.querySelector("input[data-ex='"+ex.id+"'][data-set='0'][data-f='w']");
+      var rEl=document.querySelector("input[data-ex='"+ex.id+"'][data-set='0'][data-f='r']");
+      var w=parseFloat(wEl&&wEl.value)||0, r=parseInt(rEl&&rEl.value,10)||0;
+      if(w>0&&r>0){
+        el.innerHTML="<div class='stat'><div class='k'>Est. 1-Rep Max</div><div class='v'>"+Math.round(est1RM(w,r))+"<small> lb</small></div></div>"+
+                     "<div class='stat'><div class='k'>Start program at</div><div class='v'>"+startW(w,r)+"<small> lb</small></div></div>";
+      } else el.innerHTML="";
+    });
+  }
+  updateWarmupCalcs();
+}
+
+function updateWarmupCalcs(){
+  var d=dayByKey(currentDay);
   d.ex.forEach(function(ex){
-    if(!ex.calc) return;
-    var el=document.getElementById("calc_"+ex.id);
-    if(!el) return;
+    if(ex.type!=='main'||!ex.weighted) return;
+    var el=document.getElementById('wucalc_'+ex.id); if(!el) return;
     var wEl=document.querySelector("input[data-ex='"+ex.id+"'][data-set='0'][data-f='w']");
-    var rEl=document.querySelector("input[data-ex='"+ex.id+"'][data-set='0'][data-f='r']");
-    var w=parseFloat(wEl&&wEl.value)||0, r=parseInt(rEl&&rEl.value,10)||0;
-    if(w>0&&r>0){
-      el.innerHTML="<div class='stat'><div class='k'>Est. 1-Rep Max</div><div class='v'>"+Math.round(est1RM(w,r))+"<small> lb</small></div></div>"+
-                   "<div class='stat'><div class='k'>Start program at</div><div class='v'>"+startW(w,r)+"<small> lb</small></div></div>";
-    } else el.innerHTML="";
+    var w=parseFloat(wEl&&wEl.value)||0;
+    if(!w){
+      var last=lastSessionFor(d.key);
+      var prev=last&&last.logs&&last.logs[ex.id];
+      if(prev&&prev[0]) w=parseFloat(prev[0].w)||0;
+    }
+    var sets=warmupSets(w);
+    if(!sets.length){el.innerHTML='';return;}
+    var html="<details class='wu-details'><summary>Warm-up sets</summary><div class='wu-sets'>";
+    sets.forEach(function(s){html+="<span class='wu-set'>"+s.w+"<small>×"+s.r+"</small></span>";});
+    html+="</div></details>";
+    el.innerHTML=html;
   });
 }
 
@@ -744,6 +820,7 @@ function collectSession(){
     id:"s"+Date.now(),
     date:document.getElementById("sessDate").value||todayStr(),
     bw:document.getElementById("sessBW").value||"",
+    dur:Math.max(0,Math.floor((Date.now()-sessStart)/1000)),
     day:d.key, dayName:d.name,
     logs:logs
   };
@@ -767,7 +844,7 @@ function renderHistory(){
       if(parts.length) body+="<div class='hist-ex'><span class='n'>"+ex.name+prFlag+"</span> — <span class='s'>"+parts.join(", ")+"</span></div>";
     });
     det.innerHTML=
-      "<summary><span><span class='hist-d'><span>"+d.short+"</span> · "+fmtDate(sess.date)+"</span><div class='hist-meta'>"+nEx+" exercises"+(sess.bw?" · BW "+sess.bw+"lb":"")+"</div></span><span class='chev'>+</span></summary>"+
+      "<summary><span><span class='hist-d'><span>"+d.short+"</span> · "+fmtDate(sess.date)+"</span><div class='hist-meta'>"+nEx+" exercises"+(sess.bw?" · BW "+sess.bw+"lb":"")+(sess.dur?" · "+fmtDur(sess.dur):"")+"</div></span><span class='chev'>+</span></summary>"+
       "<div class='hist-body'>"+body+"<button class='del' data-id='"+sess.id+"'>Delete this entry</button></div>";
     c.appendChild(det);
   });
@@ -806,7 +883,7 @@ document.getElementById("saveSession").addEventListener("click",function(){
   persist().then(function(ok){
     if(ok) flash(document.getElementById("saveNote"), prNames.length?"Saved · PR: "+prNames.join(", ")+"!":"Workout saved ✓","ok");
     else flash(document.getElementById("saveNote"),"Saved on page, but storage failed — Copy Backup!","err");
-    benchUnlocked={}; setStatus(); renderDay(); renderHistory(); renderProgress();
+    benchUnlocked={}; startSessTimer(); setStatus(); renderDay(); renderHistory(); renderProgress();
     notifyChanged();
   });
 });
@@ -924,7 +1001,8 @@ Promise.all([
 ]).then(function(){
   setStatus();
   renderWeekBar();
+  startSessTimer();
   renderDay();
-}).catch(function(){ setStatus(); renderWeekBar(); renderDay(); });
+}).catch(function(){ setStatus(); renderWeekBar(); startSessTimer(); renderDay(); });
 
 })();
