@@ -202,8 +202,8 @@
   .rest-track{height:4px;background:var(--steel-700);border-radius:2px;overflow:hidden;}
   .rest-fill{height:100%;background:var(--amber);border-radius:2px;transition:width .5s linear;width:100%;}
   .rest-btn-sm{padding:7px 11px;font-size:.78rem;}
-  .btn-rest-row{background:none;border:none;font-size:1rem;cursor:pointer;padding:4px 2px;opacity:.5;flex:0 0 auto;}
-  .btn-rest-row:active{opacity:1;}
+  .btn-rest-row{background:none;border:none;font-size:1rem;cursor:pointer;padding:4px 2px;opacity:1;color:var(--txt);flex:0 0 auto;}
+  .btn-rest-row:active{opacity:.7;}
 
   /* pr badge */
   .pr-badge{display:inline-block;background:var(--amber);color:#161616;font-family:'Barlow Semi Condensed';font-weight:700;font-size:.58rem;text-transform:uppercase;letter-spacing:.06em;padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle;}
