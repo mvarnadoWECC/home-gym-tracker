@@ -147,6 +147,21 @@ function render(){
   // auto-sync after local changes
   window.addEventListener("hg:changed",scheduleAuto);
 
+  // silent pull on page load so every device gets the latest data automatically
+  if(getAuto() && configured()){
+    var savedCode=getCode();
+    if(validCode(savedCode)){
+      setTimeout(function(){
+        cloudGet(savedCode).then(function(remote){
+          return window.HG.merge(remote).then(function(added){
+            if(added>0) flash("Auto-synced — "+added+" new workout"+(added===1?"":"s")+" pulled.","ok");
+            refreshStatus();
+          });
+        }).catch(function(){}); // silent fail — don't disrupt the user
+      },1200);
+    }
+  }
+
   refreshStatus();
 }
 
