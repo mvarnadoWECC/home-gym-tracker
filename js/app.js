@@ -431,19 +431,19 @@ function renderProgress(){
   if(pts.length===0){
     stats.innerHTML="";
     area.innerHTML="<div class='chart-empty'>No "+move.name+" data yet. Log a few sets with weight × reps and your estimated 1RM trend appears here.</div>";
-    return;
+  } else {
+    var latest=pts[pts.length-1].value, first=pts[0].value;
+    var best=Math.max.apply(null,pts.map(function(p){return p.value;}));
+    var diff=latest-first;
+    var pct=first?Math.round((diff/first)*100):0;
+    var cls=diff>0?"pos":(diff<0?"neg":"");
+    var sign=diff>0?"+":"";
+    stats.innerHTML=
+      "<div class='stat'><div class='k'>Latest e1RM</div><div class='v'>"+latest+"<small> lb</small></div></div>"+
+      "<div class='stat'><div class='k'>Best e1RM</div><div class='v'>"+best+"<small> lb</small></div></div>"+
+      "<div class='stat'><div class='k'>Change ("+pts.length+" sessions)</div><div class='v "+cls+"'>"+sign+diff+"<small> lb ("+sign+pct+"%)</small></div></div>";
+    area.innerHTML=buildChartSVG(pts);
   }
-  var latest=pts[pts.length-1].value, first=pts[0].value;
-  var best=Math.max.apply(null,pts.map(function(p){return p.value;}));
-  var diff=latest-first;
-  var pct=first?Math.round((diff/first)*100):0;
-  var cls=diff>0?"pos":(diff<0?"neg":"");
-  var sign=diff>0?"+":"";
-  stats.innerHTML=
-    "<div class='stat'><div class='k'>Latest e1RM</div><div class='v'>"+latest+"<small> lb</small></div></div>"+
-    "<div class='stat'><div class='k'>Best e1RM</div><div class='v'>"+best+"<small> lb</small></div></div>"+
-    "<div class='stat'><div class='k'>Change ("+pts.length+" sessions)</div><div class='v "+cls+"'>"+sign+diff+"<small> lb ("+sign+pct+"%)</small></div></div>";
-  area.innerHTML=buildChartSVG(pts);
   renderBWChart();
 }
 
