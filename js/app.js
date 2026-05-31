@@ -202,18 +202,26 @@ function est1RM(w,r){ if(!w||!r) return 0; return w*(1+r/30); }
 function startW(w,r){ var e=est1RM(w,r); return e?roundTo5(e*0.80):0; }
 function todayStr(){ var d=new Date(); var m=("0"+(d.getMonth()+1)).slice(-2); var day=("0"+d.getDate()).slice(-2); return d.getFullYear()+"-"+m+"-"+day; }
 function fmtDate(s){ if(!s) return ""; var p=s.split("-"); if(p.length!==3) return s; return p[1]+"/"+p[2]+"/"+p[0].slice(2); }
-function fmtDur(secs){ var m=Math.floor(secs/60); return m+" min"; }
+function fmtDur(secs){ var h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60),s=secs%60; return h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s; }
 function lastSessionFor(key){ for(var i=sessions.length-1;i>=0;i--){ if(sessions[i].day===key) return sessions[i]; } return null; }
 
 function startSessTimer(){
   sessStart=Date.now();
   clearInterval(sessTimerTick);
-  var el=document.getElementById('sessDurVal');
-  if(el) el.textContent='0 min';
+  var btn=document.getElementById('sessTimerBtn');
+  if(btn) btn.textContent='Reset';
   sessTimerTick=setInterval(function(){
     var el=document.getElementById('sessDurVal');
     if(el) el.textContent=fmtDur(Math.floor((Date.now()-sessStart)/1000));
-  },30000);
+  },1000);
+}
+function resetSessTimer(){
+  clearInterval(sessTimerTick);
+  sessStart=0;
+  var el=document.getElementById('sessDurVal');
+  if(el) el.textContent='0:00:00';
+  var btn=document.getElementById('sessTimerBtn');
+  if(btn) btn.textContent='Start';
 }
 
 function warmupSets(w){
@@ -593,7 +601,6 @@ function selectDay(key){
   currentDay=key;
   var btns=picker.querySelectorAll(".dbtn");
   btns.forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-key")===key); });
-  startSessTimer();
   renderDay();
 }
 
@@ -638,6 +645,9 @@ document.getElementById("exContainer").addEventListener("click",function(e){
 });
 document.getElementById('restAdd').addEventListener('click',function(){ restEnd+=30000; restTotal+=30; });
 document.getElementById('restSkip').addEventListener('click',stopRest);
+document.getElementById('sessTimerBtn').addEventListener('click',function(){
+  if(sessStart===0) startSessTimer(); else resetSessTimer();
+});
 
 /* ---- menu drawer ---- */
 function openMenu(){ document.getElementById('menuDrawer').classList.add('open'); document.getElementById('menuBackdrop').classList.add('open'); }
@@ -883,7 +893,7 @@ document.getElementById("saveSession").addEventListener("click",function(){
   persist().then(function(ok){
     if(ok) flash(document.getElementById("saveNote"), prNames.length?"Saved · PR: "+prNames.join(", ")+"!":"Workout saved ✓","ok");
     else flash(document.getElementById("saveNote"),"Saved on page, but storage failed — Copy Backup!","err");
-    benchUnlocked={}; startSessTimer(); setStatus(); renderDay(); renderHistory(); renderProgress();
+    benchUnlocked={}; resetSessTimer(); setStatus(); renderDay(); renderHistory(); renderProgress();
     notifyChanged();
   });
 });
@@ -1001,8 +1011,7 @@ Promise.all([
 ]).then(function(){
   setStatus();
   renderWeekBar();
-  startSessTimer();
   renderDay();
-}).catch(function(){ setStatus(); renderWeekBar(); startSessTimer(); renderDay(); });
+}).catch(function(){ setStatus(); renderWeekBar(); renderDay(); });
 
 })();

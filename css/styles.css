@@ -84,9 +84,11 @@
   .btn-sub.active{border-color:var(--amber);color:var(--amber);}
 
   /* session duration */
-  .sess-dur{display:flex;align-items:center;gap:7px;margin:-4px 0 16px;font-size:.78rem;}
-  .sess-dur-label{font-family:'Barlow Semi Condensed';font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:.62rem;color:var(--txt-dim);}
-  #sessDurVal{color:var(--amber);font-family:'Barlow Semi Condensed';font-weight:700;font-size:.88rem;}
+  .sess-dur{display:flex;align-items:center;gap:14px;margin:0 0 18px;padding:12px 14px;background:var(--steel-850);border:1px solid var(--line);border-radius:10px;}
+  .sess-dur-inner{flex:1;}
+  .sess-dur-label{font-family:'Barlow Semi Condensed';font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:.62rem;color:var(--txt-dim);margin-bottom:2px;}
+  #sessDurVal{font-family:'Anton';font-size:2.2rem;color:var(--amber);line-height:1;}
+  .btn-sess-timer{padding:10px 18px;font-size:.88rem;white-space:nowrap;}
 
   /* warm-up set calculator */
   .wu-details{margin-top:8px;}
