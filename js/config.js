@@ -12,4 +12,4 @@
    Example:  window.SYNC_API = "https://home-gym-sync.YOURNAME.deno.dev";
    (No trailing slash, no /data — sync.js adds that.)
    ============================================================ */
-window.SYNC_API = "";
+window.SYNC_API = "https://home-gym-tracker.mvarnadowecc.deno.net";
