@@ -11,7 +11,22 @@
     padding-bottom:70px;
   }
   .wrap{max-width:760px;margin:0 auto;padding:0 14px;}
-  header{padding:30px 14px 22px;border-bottom:3px solid var(--amber);background:linear-gradient(180deg,var(--steel-850),var(--steel-900));}
+  header{position:relative;padding:30px 14px 22px;border-bottom:3px solid var(--amber);background:linear-gradient(180deg,var(--steel-850),var(--steel-900));}
+  .menu-btn{position:absolute;top:16px;right:16px;background:var(--steel-800);border:1px solid var(--line);color:var(--txt-dim);border-radius:8px;padding:9px 10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:0;}
+  .menu-btn:active{border-color:var(--amber);color:var(--amber);}
+
+  /* drawer backdrop */
+  #menuBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:39;opacity:0;pointer-events:none;transition:opacity .25s;}
+  #menuBackdrop.open{opacity:1;pointer-events:auto;}
+
+  /* slide-in drawer */
+  #menuDrawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100vw);background:var(--steel-850);border-left:1px solid var(--line);z-index:40;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);}
+  #menuDrawer.open{transform:translateX(0);}
+  .drawer-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:3px solid var(--amber);flex:0 0 auto;background:linear-gradient(180deg,var(--steel-850),var(--steel-900));}
+  .drawer-title{font-family:'Anton';font-size:1.25rem;text-transform:uppercase;line-height:1;}
+  .drawer-close{background:none;border:none;color:var(--txt-dim);font-size:1.3rem;cursor:pointer;padding:4px 8px;line-height:1;}
+  .drawer-close:active{color:var(--txt);}
+  .drawer-body{flex:1;overflow-y:auto;padding:0 18px 40px;}
   .kicker{font-family:'Barlow Semi Condensed';font-weight:700;letter-spacing:.3em;text-transform:uppercase;font-size:.7rem;color:var(--amber);margin-bottom:6px;}
   h1{font-family:'Anton';font-weight:400;text-transform:uppercase;font-size:clamp(2.2rem,8vw,3.4rem);line-height:.92;}
   h1 span{color:var(--amber);}
@@ -220,6 +235,8 @@
     .btn.ghost:hover{border-color:var(--amber);color:var(--txt);}
     .mchip:hover{border-color:var(--amber);}
     .hist-item summary:hover,.warm summary:hover{background:rgba(242,194,0,.04);}
+    .menu-btn:hover{border-color:var(--amber);color:var(--amber);}
+    .drawer-close:hover{color:var(--txt);}
     input:hover,textarea:hover{border-color:var(--steel-600);}
     .btn-add-set:hover{border-color:var(--amber);color:var(--amber);}
     .btn-sub:hover{border-color:var(--amber);color:var(--amber);}

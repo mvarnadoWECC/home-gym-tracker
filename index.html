@@ -17,6 +17,9 @@
 <body>
 
 <header>
+  <button class="menu-btn" id="menuBtn" aria-label="Open menu">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
   <div class="wrap">
     <div class="kicker">Rogue Rack · 4-Day Build</div>
     <h1>Track <span>&amp; Build</span></h1>
@@ -81,60 +84,74 @@
     <div id="streakGrid"></div>
   </section>
 
-  <!-- HISTORY -->
-  <section id="historySec">
-    <div class="sec-label">Your log</div>
-    <h2>History</h2>
-    <p class="lead" id="histLead">Every saved workout, newest first. Tap one to see all your sets.</p>
-    <div id="histContainer"></div>
-  </section>
-
-  <!-- SYNC -->
-  <section id="syncSec">
-    <div class="sec-label">Phone ↔ Computer</div>
-    <h2>Sync</h2>
-    <p class="lead">Link your devices with a shared code. Log on your phone, then <b>Pull</b> on your computer (or turn on auto-sync). Your code is the only key — keep it private.</p>
-
-    <div class="status" id="syncStatus">Checking…</div>
-
-    <div class="meta">
-      <div class="field" style="grid-column:1 / -1;">
-        <label>Sync code (same on every device)</label>
-        <input type="text" id="syncCode" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. K7P2QX9M">
-      </div>
-    </div>
-
-    <div class="row-btns">
-      <button class="btn ghost" id="syncGen">Generate Code</button>
-      <button class="btn" id="syncPush">Sync Now</button>
-      <button class="btn ghost" id="syncPull">Pull</button>
-    </div>
-    <label class="toggle"><input type="checkbox" id="syncAuto"> <span>Auto-sync after each saved workout</span></label>
-    <div class="note" id="syncNote" style="margin-top:6px;"></div>
-
-    <div class="setup-box" id="syncSetup">
-      <strong>One-time setup</strong>
-      <p>Sync needs a tiny free backend. The <code>backends/</code> folder has three you can deploy with an account you already have — <b>Deno Deploy</b> or <b>Netlify</b> (both sign in with GitHub), or Cloudflare. Deploy one, paste its URL into <code>js/config.js</code>, and this panel switches on. See <code>backends/README.md</code> — Claude Code can do the deploy for you.</p>
-    </div>
-  </section>
-
-  <!-- BACKUP -->
-  <section>
-    <div class="sec-label">Safety net</div>
-    <h2>Backup</h2>
-    <p class="lead">Storage can occasionally fail. Tap <b>Copy backup</b> anytime to grab all your data as text — paste it somewhere safe (Notes, email). To restore on a new device, paste it below and tap Restore.</p>
-    <div class="row-btns">
-      <button class="btn ghost" id="copyBtn">Copy Backup</button>
-      <button class="btn ghost" id="restoreBtn">Restore</button>
-      <span class="note" id="backupNote"></span>
-    </div>
-    <textarea id="backupBox" placeholder="Backup data appears here / paste here to restore…"></textarea>
-  </section>
-
   <footer>
     <div>Run the Benchmark first to set your numbers · then rotate Upper A → Lower A → Upper B → Lower B.</div>
     <p class="disc">General fitness guidance, not medical advice. Warm up, keep good form, use your safety bars when training solo.</p>
   </footer>
+</div>
+
+<!-- MENU BACKDROP -->
+<div id="menuBackdrop"></div>
+
+<!-- MENU DRAWER -->
+<div id="menuDrawer" role="dialog" aria-modal="true" aria-label="History and settings">
+  <div class="drawer-header">
+    <span class="drawer-title">History &amp; Settings</span>
+    <button class="drawer-close" id="menuClose" aria-label="Close menu">&#x2715;</button>
+  </div>
+  <div class="drawer-body">
+
+    <!-- HISTORY -->
+    <section id="historySec">
+      <div class="sec-label">Your log</div>
+      <h2>History</h2>
+      <p class="lead" id="histLead">Every saved workout, newest first. Tap one to see all your sets.</p>
+      <div id="histContainer"></div>
+    </section>
+
+    <!-- SYNC -->
+    <section id="syncSec">
+      <div class="sec-label">Phone ↔ Computer</div>
+      <h2>Sync</h2>
+      <p class="lead">Link your devices with a shared code. Log on your phone, then <b>Pull</b> on your computer (or turn on auto-sync). Your code is the only key — keep it private.</p>
+
+      <div class="status" id="syncStatus">Checking…</div>
+
+      <div class="meta">
+        <div class="field" style="grid-column:1 / -1;">
+          <label>Sync code (same on every device)</label>
+          <input type="text" id="syncCode" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. K7P2QX9M">
+        </div>
+      </div>
+
+      <div class="row-btns">
+        <button class="btn ghost" id="syncGen">Generate Code</button>
+        <button class="btn" id="syncPush">Sync Now</button>
+        <button class="btn ghost" id="syncPull">Pull</button>
+      </div>
+      <label class="toggle"><input type="checkbox" id="syncAuto"> <span>Auto-sync after each saved workout</span></label>
+      <div class="note" id="syncNote" style="margin-top:6px;"></div>
+
+      <div class="setup-box" id="syncSetup">
+        <strong>One-time setup</strong>
+        <p>Sync needs a tiny free backend. The <code>backends/</code> folder has three you can deploy with an account you already have — <b>Deno Deploy</b> or <b>Netlify</b> (both sign in with GitHub), or Cloudflare. Deploy one, paste its URL into <code>js/config.js</code>, and this panel switches on. See <code>backends/README.md</code> — Claude Code can do the deploy for you.</p>
+      </div>
+    </section>
+
+    <!-- BACKUP -->
+    <section>
+      <div class="sec-label">Safety net</div>
+      <h2>Backup</h2>
+      <p class="lead">Storage can occasionally fail. Tap <b>Copy backup</b> anytime to grab all your data as text — paste it somewhere safe (Notes, email). To restore on a new device, paste it below and tap Restore.</p>
+      <div class="row-btns">
+        <button class="btn ghost" id="copyBtn">Copy Backup</button>
+        <button class="btn ghost" id="restoreBtn">Restore</button>
+        <span class="note" id="backupNote"></span>
+      </div>
+      <textarea id="backupBox" placeholder="Backup data appears here / paste here to restore…"></textarea>
+    </section>
+
+  </div>
 </div>
 
 <div id="restTimer">

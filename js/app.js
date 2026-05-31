@@ -581,6 +581,13 @@ document.getElementById("exContainer").addEventListener("click",function(e){
 });
 document.getElementById('restAdd').addEventListener('click',function(){ restEnd+=30000; restTotal+=30; });
 document.getElementById('restSkip').addEventListener('click',stopRest);
+
+/* ---- menu drawer ---- */
+function openMenu(){ document.getElementById('menuDrawer').classList.add('open'); document.getElementById('menuBackdrop').classList.add('open'); }
+function closeMenu(){ document.getElementById('menuDrawer').classList.remove('open'); document.getElementById('menuBackdrop').classList.remove('open'); }
+document.getElementById('menuBtn').addEventListener('click',openMenu);
+document.getElementById('menuClose').addEventListener('click',closeMenu);
+document.getElementById('menuBackdrop').addEventListener('click',closeMenu);
 document.getElementById("sessDate").addEventListener("change",function(){
   clearTimeout(draftTimer); draftTimer=setTimeout(saveDraft,400);
 });
