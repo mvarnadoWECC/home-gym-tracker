@@ -649,11 +649,20 @@ function renderDay(){
       var bmValHtml=ex.weighted
         ?(bmSet.w||"—")+" lb × "+(bmSet.r||"—")+" reps"
         :(bmSet.r||"—")+" reps";
+      var bmW=parseFloat(bmSet.w)||0, bmR=parseInt(bmSet.r,10)||0;
+      var bmCalcHtml="";
+      if(ex.calc && bmW>0 && bmR>0){
+        bmCalcHtml="<div class='calc'>"+
+          "<div class='stat'><div class='k'>Est. 1-Rep Max</div><div class='v'>"+Math.round(est1RM(bmW,bmR))+"<small> lb</small></div></div>"+
+          "<div class='stat'><div class='k'>Start program at</div><div class='v'>"+startW(bmW,bmR)+"<small> lb</small></div></div>"+
+          "</div>";
+      }
       box.innerHTML=
         "<div class='ex-head'><span class='ex-title'>"+resolved.name+"</span>"+
         "<button class='btn-new-bench' data-ex='"+ex.id+"'>New Benchmark</button></div>"+
         "<div class='ex-note'>"+buildNote(resolved)+"</div>"+
-        "<div class='bm-result'><span class='bm-val'>"+bmValHtml+"</span><span class='bm-date'>"+fmtDate(last.date)+"</span></div>";
+        "<div class='bm-result'><span class='bm-val'>"+bmValHtml+"</span><span class='bm-date'>"+fmtDate(last.date)+"</span></div>"+
+        bmCalcHtml;
     } else {
       var schemeCount=effectiveSets(resolved);
       var setCount=draftSets?Math.max(draftSets.length,schemeCount):schemeCount;
