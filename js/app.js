@@ -155,6 +155,7 @@ var subState={};
 var program={cycle:1,week:1};
 var currentDay="benchmark";
 var currentMove="fsq";
+var restEnd=0,restTotal=90,restTick=null;
 
 function hasWS(){ return (typeof window!=="undefined" && window.storage && typeof window.storage.get==="function"); }
 
@@ -261,6 +262,53 @@ function getBenchmarkRec(exId){
   }
   if(!best) return null;
   return {e1rm:Math.round(best), start:roundTo5(best*0.80)};
+}
+
+function allTimeBestE1RM(exId){
+  var best=0;
+  for(var i=0;i<sessions.length;i++){
+    var sets=sessions[i].logs&&sessions[i].logs[exId];
+    if(!sets) continue;
+    for(var j=0;j<sets.length;j++){
+      var e=est1RM(parseFloat(sets[j].w)||0,parseInt(sets[j].r,10)||0);
+      if(e>best) best=e;
+    }
+  }
+  return best;
+}
+
+function startRest(secs){
+  secs=secs||90;
+  clearInterval(restTick);
+  restTotal=secs;
+  restEnd=Date.now()+secs*1000;
+  var el=document.getElementById('restTimer');
+  el.style.borderTopColor='';
+  document.getElementById('restTime').style.color='';
+  el.classList.add('active');
+  tickRest();
+  restTick=setInterval(tickRest,500);
+}
+function stopRest(){
+  clearInterval(restTick);
+  document.getElementById('restTimer').classList.remove('active');
+}
+function tickRest(){
+  var ms=restEnd-Date.now();
+  var secs=Math.max(0,Math.ceil(ms/1000));
+  var m=Math.floor(secs/60),s=secs%60;
+  document.getElementById('restTime').textContent=m+':'+(s<10?'0':'')+s;
+  var pct=Math.max(0,Math.min(100,(ms/(restTotal*1000))*100));
+  document.getElementById('restFill').style.width=pct+'%';
+  if(secs===0){
+    clearInterval(restTick);
+    if(navigator.vibrate) navigator.vibrate([300,100,300]);
+    var el=document.getElementById('restTimer');
+    el.style.borderTopColor='var(--green)';
+    document.getElementById('restTime').textContent='Done!';
+    document.getElementById('restTime').style.color='var(--green)';
+    setTimeout(stopRest,2000);
+  }
 }
 
 function renderWeekBar(){
@@ -396,6 +444,86 @@ function renderProgress(){
     "<div class='stat'><div class='k'>Best e1RM</div><div class='v'>"+best+"<small> lb</small></div></div>"+
     "<div class='stat'><div class='k'>Change ("+pts.length+" sessions)</div><div class='v "+cls+"'>"+sign+diff+"<small> lb ("+sign+pct+"%)</small></div></div>";
   area.innerHTML=buildChartSVG(pts);
+  renderBWChart();
+}
+
+function renderBWChart(){
+  var card=document.getElementById('bwCard');
+  var stats=document.getElementById('bwStats');
+  var area=document.getElementById('bwChartArea');
+  if(!card||!stats||!area) return;
+  var pts=[];
+  sessions.forEach(function(s){
+    var v=parseFloat(s.bw); if(v>0) pts.push({date:s.date,value:v,key:s.date+s.id});
+  });
+  pts.sort(function(a,b){ return a.key<b.key?-1:1; });
+  if(!pts.length){ card.style.display='none'; return; }
+  card.style.display='';
+  var latest=pts[pts.length-1].value, first=pts[0].value;
+  var diff=Math.round((latest-first)*10)/10;
+  var sign=diff>0?'+':'', cls=diff>0?'pos':(diff<0?'neg':'');
+  stats.innerHTML=
+    "<div class='stat'><div class='k'>Current</div><div class='v'>"+latest+"<small> lb</small></div></div>"+
+    "<div class='stat'><div class='k'>Change</div><div class='v "+cls+"'>"+sign+diff+"<small> lb</small></div></div>";
+  area.innerHTML=pts.length>=2?buildChartSVG(pts):"<div class='chart-empty'>Add bodyweight in one more session to see the trend.</div>";
+}
+
+function renderStreak(){
+  var grid=document.getElementById('streakGrid');
+  var lead=document.getElementById('streakLead');
+  if(!grid) return;
+
+  var dateMap={};
+  sessions.forEach(function(s){ if(s.date) dateMap[s.date]=true; });
+
+  var today=new Date();
+  var todayDs=todayStr();
+
+  var streak=0;
+  for(var w=0;w<52;w++){
+    var weekHas=false;
+    for(var d=0;d<7;d++){
+      var dt=new Date(today);
+      dt.setDate(today.getDate()-today.getDay()-w*7+d);
+      var ds=dt.getFullYear()+'-'+('0'+(dt.getMonth()+1)).slice(-2)+'-'+('0'+dt.getDate()).slice(-2);
+      if(dateMap[ds]){weekHas=true;break;}
+    }
+    if(!weekHas&&w===0) continue;
+    if(!weekHas) break;
+    streak++;
+  }
+
+  if(lead){
+    if(!sessions.length) lead.textContent='No workouts logged yet.';
+    else if(streak===0) lead.textContent='No workout logged this week — keep the streak alive!';
+    else lead.textContent=streak+' week'+(streak===1?' streak':'s in a row')+'  ·  Last 16 weeks';
+  }
+
+  var WEEKS=16;
+  var DAY_LABELS=['S','M','T','W','T','F','S'];
+  var labelsHtml='<div class="streak-week-labels"><div class="streak-wk-lbl"></div>';
+  for(var wi=WEEKS-1;wi>=0;wi--){
+    var wdt=new Date(today);
+    wdt.setDate(today.getDate()-today.getDay()-wi*7);
+    var wLabel=(wdt.getMonth()+1)+'/'+wdt.getDate();
+    labelsHtml+='<div class="streak-wk-lbl">'+wLabel+'</div>';
+  }
+  labelsHtml+='</div>';
+
+  var calHtml='<div style="display:flex;gap:3px;align-items:start"><div style="display:grid;grid-template-rows:repeat(7,12px);gap:3px;margin-right:2px">';
+  for(var dl=0;dl<7;dl++) calHtml+='<div style="width:12px;height:12px;display:flex;align-items:center;justify-content:center;font-size:.48rem;color:var(--txt-dim)">'+DAY_LABELS[dl]+'</div>';
+  calHtml+='</div><div class="streak-cal">';
+  for(var wi2=WEEKS-1;wi2>=0;wi2--){
+    for(var di=0;di<7;di++){
+      var dt2=new Date(today);
+      dt2.setDate(today.getDate()-today.getDay()-wi2*7+di);
+      var ds2=dt2.getFullYear()+'-'+('0'+(dt2.getMonth()+1)).slice(-2)+'-'+('0'+dt2.getDate()).slice(-2);
+      var cls2='s-day'+(dateMap[ds2]?' has-log':'')+(ds2===todayDs?' today':'');
+      calHtml+='<div class="'+cls2+'"></div>';
+    }
+  }
+  calHtml+='</div></div>';
+  grid.innerHTML=labelsHtml+calHtml;
 }
 
 /* ---------------- RENDER ---------------- */
@@ -443,6 +571,7 @@ document.getElementById("exContainer").addEventListener("input",function(){
   draftTimer=setTimeout(saveDraft,400);
 });
 document.getElementById("exContainer").addEventListener("click",function(e){
+  if(e.target.classList.contains("btn-rest-row")){ startRest(90); return; }
   if(e.target.classList.contains("btn-add-set")){
     addSetRow(e.target.getAttribute("data-ex"));
   }
@@ -450,6 +579,8 @@ document.getElementById("exContainer").addEventListener("click",function(e){
     cycleSub(e.target.getAttribute("data-orig"));
   }
 });
+document.getElementById('restAdd').addEventListener('click',function(){ restEnd+=30000; restTotal+=30; });
+document.getElementById('restSkip').addEventListener('click',stopRest);
 document.getElementById("sessDate").addEventListener("change",function(){
   clearTimeout(draftTimer); draftTimer=setTimeout(saveDraft,400);
 });
@@ -500,7 +631,8 @@ function renderDay(){
         ?"<input type='number' inputmode='decimal' data-ex='"+ex.id+"' data-set='"+s+"' data-f='w' value='"+wv+"' placeholder='wt'><span class='unit'>lb</span>"
         :"<input type='number' inputmode='decimal' data-ex='"+ex.id+"' data-set='"+s+"' data-f='w' value='"+wv+"' placeholder='+0'><span class='unit'>lb</span>";
       rows+="<div class='set-row'><span class='set-tag'>"+label+"</span>"+wInput+
-            "<input type='number' inputmode='numeric' data-ex='"+ex.id+"' data-set='"+s+"' data-f='r' value='"+rv+"' placeholder='reps'><span class='unit'>rep</span></div>";
+            "<input type='number' inputmode='numeric' data-ex='"+ex.id+"' data-set='"+s+"' data-f='r' value='"+rv+"' placeholder='reps'><span class='unit'>rep</span>"+
+            "<button class='btn-rest-row' type='button' title='Start rest timer'>⏱</button></div>";
     }
     var lastTxt="";
     if(prev){
@@ -594,7 +726,8 @@ function renderHistory(){
       var arr=sess.logs&&sess.logs[ex.id]; if(!arr) return;
       var parts=[];
       for(var k=0;k<arr.length;k++){ if(arr[k].w||arr[k].r) parts.push((arr[k].w?arr[k].w+"×":"")+(arr[k].r||"")); }
-      if(parts.length) body+="<div class='hist-ex'><span class='n'>"+ex.name+"</span> — <span class='s'>"+parts.join(", ")+"</span></div>";
+      var prFlag=(sess.prs&&sess.prs.indexOf(ex.id)>=0)?"<span class='pr-badge'>PR</span>":"";
+      if(parts.length) body+="<div class='hist-ex'><span class='n'>"+ex.name+prFlag+"</span> — <span class='s'>"+parts.join(", ")+"</span></div>";
     });
     det.innerHTML=
       "<summary><span><span class='hist-d'><span>"+d.short+"</span> · "+fmtDate(sess.date)+"</span><div class='hist-meta'>"+nEx+" exercises"+(sess.bw?" · BW "+sess.bw+"lb":"")+"</div></span><span class='chev'>+</span></summary>"+
@@ -608,6 +741,7 @@ function renderHistory(){
       persist(); renderDay(); notifyChanged();
     });
   });
+  renderStreak();
 }
 
 /* ---------------- ACTIONS ---------------- */
@@ -620,11 +754,20 @@ function persist(){ return saveRaw(SESS_KEY,JSON.stringify(sessions)); }
 document.getElementById("saveSession").addEventListener("click",function(){
   var sess=collectSession();
   if(Object.keys(sess.logs).length===0){ flash(document.getElementById("saveNote"),"Nothing logged yet","err"); return; }
+  var prNames=[];
+  var d=dayByKey(currentDay);
+  d.ex.forEach(function(ex){
+    if(!ex.weighted) return;
+    var sets=sess.logs[ex.id]; if(!sets||!sets.length) return;
+    var newBest=0;
+    sets.forEach(function(s){ var e=est1RM(parseFloat(s.w)||0,parseInt(s.r,10)||0); if(e>newBest) newBest=e; });
+    if(newBest>0 && newBest>allTimeBestE1RM(ex.id)){ prNames.push(resolveExercise(ex).name); sess.prs=sess.prs||[]; sess.prs.push(ex.id); }
+  });
   sessions.push(sess);
   delete drafts[currentDay];
   saveRaw(DRAFT_KEY,JSON.stringify(drafts));
   persist().then(function(ok){
-    if(ok) flash(document.getElementById("saveNote"),"Workout saved ✓","ok");
+    if(ok) flash(document.getElementById("saveNote"), prNames.length?"Saved · PR: "+prNames.join(", ")+"!":"Workout saved ✓","ok");
     else flash(document.getElementById("saveNote"),"Saved on page, but storage failed — Copy Backup!","err");
     setStatus(); renderHistory(); renderProgress();
     notifyChanged();
@@ -719,7 +862,8 @@ function addSetRow(exId){
     ?"<input type='number' inputmode='decimal' data-ex='"+exId+"' data-set='"+s+"' data-f='w' placeholder='wt'><span class='unit'>lb</span>"
     :"<input type='number' inputmode='decimal' data-ex='"+exId+"' data-set='"+s+"' data-f='w' placeholder='+0'><span class='unit'>lb</span>";
   var rowHtml="<div class='set-row'><span class='set-tag'>"+label+"</span>"+wInput+
-    "<input type='number' inputmode='numeric' data-ex='"+exId+"' data-set='"+s+"' data-f='r' placeholder='reps'><span class='unit'>rep</span></div>";
+    "<input type='number' inputmode='numeric' data-ex='"+exId+"' data-set='"+s+"' data-f='r' placeholder='reps'><span class='unit'>rep</span>"+
+    "<button class='btn-rest-row' type='button' title='Start rest timer'>⏱</button></div>";
   var btn=document.querySelector(".btn-add-set[data-ex='"+exId+"']");
   if(btn) btn.insertAdjacentHTML("beforebegin",rowHtml);
   var newW=document.querySelector("input[data-ex='"+exId+"'][data-set='"+s+"'][data-f='w']");

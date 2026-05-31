@@ -67,6 +67,18 @@
       <div class="chart-stats" id="chartStats"></div>
       <div id="chartArea"></div>
     </div>
+    <div class="card" id="bwCard" style="display:none">
+      <div class="sec-label" style="margin-bottom:6px;">Bodyweight trend</div>
+      <div class="chart-stats" id="bwStats"></div>
+      <div id="bwChartArea"></div>
+    </div>
+  </section>
+
+  <section id="streakSec">
+    <div class="sec-label">Consistency</div>
+    <h2>Streak</h2>
+    <p class="lead" id="streakLead"></p>
+    <div id="streakGrid"></div>
   </section>
 
   <!-- HISTORY -->
@@ -123,6 +135,18 @@
     <div>Run the Benchmark first to set your numbers · then rotate Upper A → Lower A → Upper B → Lower B.</div>
     <p class="disc">General fitness guidance, not medical advice. Warm up, keep good form, use your safety bars when training solo.</p>
   </footer>
+</div>
+
+<div id="restTimer">
+  <div class="rest-wrap">
+    <span class="rest-time" id="restTime">1:30</span>
+    <div class="rest-mid">
+      <span class="rest-label">Rest</span>
+      <div class="rest-track"><div class="rest-fill" id="restFill"></div></div>
+    </div>
+    <button class="btn ghost rest-btn-sm" id="restAdd">+30s</button>
+    <button class="btn rest-btn-sm" id="restSkip">Skip</button>
+  </div>
 </div>
 
 <script src="js/app.js"></script>
