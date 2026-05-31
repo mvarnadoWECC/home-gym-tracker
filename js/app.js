@@ -156,6 +156,7 @@ var program={cycle:1,week:1};
 var currentDay="benchmark";
 var currentMove="fsq";
 var restEnd=0,restTotal=90,restTick=null;
+var benchUnlocked={};
 
 function hasWS(){ return (typeof window!=="undefined" && window.storage && typeof window.storage.get==="function"); }
 
@@ -578,6 +579,10 @@ document.getElementById("exContainer").addEventListener("click",function(e){
   if(e.target.classList.contains("btn-sub")){
     cycleSub(e.target.getAttribute("data-orig"));
   }
+  if(e.target.classList.contains("btn-new-bench")){
+    benchUnlocked[e.target.getAttribute("data-ex")]=true;
+    renderDay();
+  }
 });
 document.getElementById('restAdd').addEventListener('click',function(){ restEnd+=30000; restTotal+=30; });
 document.getElementById('restSkip').addEventListener('click',stopRest);
@@ -626,28 +631,7 @@ function renderDay(){
     var draftSets=draft&&draft.logs&&draft.logs[ex.id]?draft.logs[ex.id]:null;
     var box=document.createElement("div");
     box.className="ex";
-    var schemeCount=effectiveSets(resolved);
-    var setCount=draftSets?Math.max(draftSets.length,schemeCount):schemeCount;
-    var rows="";
-    for(var s=0;s<setCount;s++){
-      var pv=draftSets?(draftSets[s]||{}):(prev&&prev[s]?prev[s]:{});
-      var wv=(pv.w!=null&&pv.w!=="")?pv.w:"";
-      var rv=(pv.r!=null&&pv.r!=="")?pv.r:"";
-      var label=setCount===1?"Set":("Set "+(s+1));
-      var wInput=resolved.weighted
-        ?"<input type='number' inputmode='decimal' data-ex='"+ex.id+"' data-set='"+s+"' data-f='w' value='"+wv+"' placeholder='wt'><span class='unit'>lb</span>"
-        :"<input type='number' inputmode='decimal' data-ex='"+ex.id+"' data-set='"+s+"' data-f='w' value='"+wv+"' placeholder='+0'><span class='unit'>lb</span>";
-      rows+="<div class='set-row'><span class='set-tag'>"+label+"</span>"+wInput+
-            "<input type='number' inputmode='numeric' data-ex='"+ex.id+"' data-set='"+s+"' data-f='r' value='"+rv+"' placeholder='reps'><span class='unit'>rep</span>"+
-            "<button class='btn-rest-row' type='button' title='Start rest timer'>⏱</button></div>";
-    }
-    var lastTxt="";
-    if(prev){
-      var parts=[];
-      for(var k=0;k<prev.length;k++){ if(prev[k]&&(prev[k].w||prev[k].r)){ parts.push((prev[k].w?prev[k].w+"×":"")+(prev[k].r||"")); } }
-      if(parts.length) lastTxt="Last: "+parts.join(", ");
-    }
-    var benchRec=getBenchmarkRec(ex.id);
+
     var chain=getChain(ex);
     var subBtn="";
     if(chain.length>1){
@@ -657,17 +641,54 @@ function renderDay(){
       var btnLbl=curIdx===0?"↻ Sub":"↻ Alt "+curIdx+"/"+(chain.length-1);
       subBtn="<button class='btn-sub"+(curIdx>0?" active":"")+"' data-orig='"+ex.id+"'>"+btnLbl+"</button>";
     }
-    var benchLine=benchRec
-      ?"<div class='ex-bench'>Benchmark → start at ~"+benchRec.start+" lb (e1RM ~"+benchRec.e1rm+" lb)</div>"
-      :"";
-    box.innerHTML=
-      "<div class='ex-head'><span class='ex-title'>"+resolved.name+"</span>"+subBtn+"</div>"+
-      "<div class='ex-note'>"+buildNote(resolved)+"</div>"+
-      benchLine+
-      "<div class='ex-last'>"+lastTxt+"</div>"+
-      rows+
-      "<button class='btn-add-set' data-ex='"+ex.id+"'>+ Add Set</button>"+
-      (ex.calc?"<div class='calc' id='calc_"+ex.id+"'></div>":"");
+
+    var bmLocked=!!(d.isBench && prev && prev.length && !benchUnlocked[ex.id] && !draftSets);
+
+    if(bmLocked){
+      var bmSet=prev[0]||{};
+      var bmValHtml=ex.weighted
+        ?(bmSet.w||"—")+" lb × "+(bmSet.r||"—")+" reps"
+        :(bmSet.r||"—")+" reps";
+      box.innerHTML=
+        "<div class='ex-head'><span class='ex-title'>"+resolved.name+"</span>"+
+        "<button class='btn-new-bench' data-ex='"+ex.id+"'>New Benchmark</button></div>"+
+        "<div class='ex-note'>"+buildNote(resolved)+"</div>"+
+        "<div class='bm-result'><span class='bm-val'>"+bmValHtml+"</span><span class='bm-date'>"+fmtDate(last.date)+"</span></div>";
+    } else {
+      var schemeCount=effectiveSets(resolved);
+      var setCount=draftSets?Math.max(draftSets.length,schemeCount):schemeCount;
+      var rows="";
+      for(var s=0;s<setCount;s++){
+        var pv=draftSets?(draftSets[s]||{}):(prev&&prev[s]?prev[s]:{});
+        var wv=(pv.w!=null&&pv.w!=="")?pv.w:"";
+        var rv=(pv.r!=null&&pv.r!=="")?pv.r:"";
+        var label=setCount===1?"Set":("Set "+(s+1));
+        var wInput=resolved.weighted
+          ?"<input type='number' inputmode='decimal' data-ex='"+ex.id+"' data-set='"+s+"' data-f='w' value='"+wv+"' placeholder='wt'><span class='unit'>lb</span>"
+          :"<input type='number' inputmode='decimal' data-ex='"+ex.id+"' data-set='"+s+"' data-f='w' value='"+wv+"' placeholder='+0'><span class='unit'>lb</span>";
+        rows+="<div class='set-row'><span class='set-tag'>"+label+"</span>"+wInput+
+              "<input type='number' inputmode='numeric' data-ex='"+ex.id+"' data-set='"+s+"' data-f='r' value='"+rv+"' placeholder='reps'><span class='unit'>rep</span>"+
+              "<button class='btn-rest-row' type='button' title='Start rest timer'>⏱</button></div>";
+      }
+      var lastTxt="";
+      if(prev){
+        var parts=[];
+        for(var k=0;k<prev.length;k++){ if(prev[k]&&(prev[k].w||prev[k].r)){ parts.push((prev[k].w?prev[k].w+"×":"")+(prev[k].r||"")); } }
+        if(parts.length) lastTxt="Last: "+parts.join(", ");
+      }
+      var benchRec=getBenchmarkRec(ex.id);
+      var benchLine=benchRec
+        ?"<div class='ex-bench'>Benchmark → start at ~"+benchRec.start+" lb (e1RM ~"+benchRec.e1rm+" lb)</div>"
+        :"";
+      box.innerHTML=
+        "<div class='ex-head'><span class='ex-title'>"+resolved.name+"</span>"+subBtn+"</div>"+
+        "<div class='ex-note'>"+buildNote(resolved)+"</div>"+
+        benchLine+
+        "<div class='ex-last'>"+lastTxt+"</div>"+
+        rows+
+        "<button class='btn-add-set' data-ex='"+ex.id+"'>+ Add Set</button>"+
+        (ex.calc?"<div class='calc' id='calc_"+ex.id+"'></div>":"");
+    }
     cont.appendChild(box);
   });
 
@@ -776,7 +797,7 @@ document.getElementById("saveSession").addEventListener("click",function(){
   persist().then(function(ok){
     if(ok) flash(document.getElementById("saveNote"), prNames.length?"Saved · PR: "+prNames.join(", ")+"!":"Workout saved ✓","ok");
     else flash(document.getElementById("saveNote"),"Saved on page, but storage failed — Copy Backup!","err");
-    setStatus(); renderHistory(); renderProgress();
+    benchUnlocked={}; setStatus(); renderDay(); renderHistory(); renderProgress();
     notifyChanged();
   });
 });

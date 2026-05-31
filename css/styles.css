@@ -83,6 +83,13 @@
   .btn-sub{background:none;border:1px solid var(--line);color:var(--txt-dim);border-radius:6px;padding:3px 8px;font-family:'Barlow Semi Condensed';font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:.68rem;cursor:pointer;white-space:nowrap;flex:0 0 auto;}
   .btn-sub.active{border-color:var(--amber);color:var(--amber);}
 
+  /* benchmark locked result */
+  .bm-result{display:flex;align-items:baseline;gap:12px;padding:11px 13px;background:var(--steel-900);border:1px solid var(--line);border-radius:8px;margin-top:6px;}
+  .bm-val{font-family:'Anton';font-size:1.45rem;color:var(--amber);line-height:1;}
+  .bm-date{font-size:.74rem;color:var(--txt-dim);font-family:'Barlow Semi Condensed';white-space:nowrap;}
+  .btn-new-bench{background:none;border:1px solid var(--line);color:var(--txt-dim);border-radius:6px;padding:4px 9px;font-family:'Barlow Semi Condensed';font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:.68rem;cursor:pointer;white-space:nowrap;flex:0 0 auto;}
+  .btn-new-bench:active{border-color:var(--amber);color:var(--amber);}
+
   /* exercise logging */
   .ex{background:var(--steel-850);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;}
   .ex-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:2px;}
@@ -244,4 +251,5 @@
     input:hover,textarea:hover{border-color:var(--steel-600);}
     .btn-add-set:hover{border-color:var(--amber);color:var(--amber);}
     .btn-sub:hover{border-color:var(--amber);color:var(--amber);}
+    .btn-new-bench:hover{border-color:var(--amber);color:var(--amber);}
   }
