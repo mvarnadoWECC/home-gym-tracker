@@ -510,8 +510,8 @@ function renderStreak(){
   }
   labelsHtml+='</div>';
 
-  var calHtml='<div style="display:flex;gap:3px;align-items:start"><div style="display:grid;grid-template-rows:repeat(7,12px);gap:3px;margin-right:2px">';
-  for(var dl=0;dl<7;dl++) calHtml+='<div style="width:12px;height:12px;display:flex;align-items:center;justify-content:center;font-size:.48rem;color:var(--txt-dim)">'+DAY_LABELS[dl]+'</div>';
+  var calHtml='<div style="display:flex;gap:4px;align-items:start"><div style="display:grid;grid-template-rows:repeat(7,18px);gap:4px;margin-right:2px">';
+  for(var dl=0;dl<7;dl++) calHtml+='<div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--txt-dim)">'+DAY_LABELS[dl]+'</div>';
   calHtml+='</div><div class="streak-cal">';
   for(var wi2=WEEKS-1;wi2>=0;wi2--){
     for(var di=0;di<7;di++){
