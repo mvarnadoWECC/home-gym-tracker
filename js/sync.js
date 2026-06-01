@@ -83,8 +83,12 @@ function doPull(){
   flash("Pulling…","ok");
   return cloudGet(code).then(function(remote){
     return window.HG.merge(remote.sessions).then(function(added){
-      if(remote.program && window.HG.applyProgram) window.HG.applyProgram(remote.program);
-      flash(added>0 ? ("Pulled — "+added+" new workout"+(added===1?"":"s")+" merged.") : "Up to date — nothing new in the cloud.","ok");
+      var progUpdated=!!(remote.program && window.HG.applyProgram);
+      if(progUpdated) window.HG.applyProgram(remote.program);
+      var msg=[];
+      if(added>0) msg.push(added+" new workout"+(added===1?"":"s"));
+      if(progUpdated) msg.push("week state updated");
+      flash(msg.length ? "Pulled — "+msg.join(", ")+"." : "Up to date — nothing new in the cloud.","ok");
       refreshStatus();
     });
   }).catch(function(e){ flash("Pull failed ("+e.message+").","err"); });
