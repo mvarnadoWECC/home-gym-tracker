@@ -152,7 +152,7 @@ var SUB_KEY="hg_subs_v1";
 var sessions=[]; // in-memory source of truth
 var drafts={};
 var subState={};
-var program={cycle:1,week:1};
+var program={upperA:{cycle:1,week:1},lowerA:{cycle:1,week:1},upperB:{cycle:1,week:1},lowerB:{cycle:1,week:1}};
 var currentDay="benchmark";
 var currentMove="fsq";
 var restEnd=0,restTotal=90,restTick=null;
@@ -292,13 +292,13 @@ function cycleSub(origId){
 }
 function effectiveSets(ex){
   if(ex.type==="bench"||ex.type==="static") return ex.sets;
-  var s=WEEKLY[program.week];
+  var s=WEEKLY[(program[currentDay]||{week:1}).week];
   if(!s) return ex.sets;
   return s[ex.type==="main"?"main":"acc"].sets;
 }
 function buildNote(ex){
   if(ex.type==="bench"||ex.type==="static") return ex.cue||"";
-  var s=WEEKLY[program.week];
+  var s=WEEKLY[(program[currentDay]||{week:1}).week];
   if(!s) return ex.cue||"";
   var scheme=s[ex.type==="main"?"main":"acc"];
   var reps=ex.repsOverride||scheme.reps;
@@ -373,14 +373,17 @@ function tickRest(){
 function renderWeekBar(){
   var bar=document.getElementById("weekBar");
   if(!bar) return;
-  var ph=PHASES[program.week-1];
+  var d=dayByKey(currentDay);
+  if(d.isBench){ bar.innerHTML=""; return; }
+  var dp=program[currentDay]||(program[currentDay]={cycle:1,week:1});
+  var ph=PHASES[dp.week-1];
   var dots="";
-  for(var i=1;i<=4;i++) dots+="<span class='wdot"+(i===program.week?" cur":"")+"'></span>";
-  var nextLabel=program.week===4?"New Cycle →":"Week "+(program.week+1)+" →";
+  for(var i=1;i<=4;i++) dots+="<span class='wdot"+(i===dp.week?" cur":"")+"'></span>";
+  var nextLabel=dp.week===4?"New Cycle →":"Week "+(dp.week+1)+" →";
   bar.innerHTML=
     "<div class='week-inner'>"+
     "<div class='week-info'>"+
-    "<span class='week-num'>Cycle "+program.cycle+" · Week "+program.week+"/4</span>"+
+    "<span class='week-num'>Cycle "+dp.cycle+" · Week "+dp.week+"/4</span>"+
     "<span class='week-phase'>"+ph.name+"</span>"+
     "<span class='week-desc'>"+ph.desc+"</span>"+
     "</div>"+
@@ -390,8 +393,8 @@ function renderWeekBar(){
     "</div></div>";
   var advBtn=document.getElementById("weekAdv");
   if(advBtn) advBtn.addEventListener("click",function(){
-    if(program.week===4){program.cycle++;program.week=1;}
-    else program.week++;
+    var dp=program[currentDay]||(program[currentDay]={cycle:1,week:1});
+    if(dp.week===4){dp.cycle++;dp.week=1;} else dp.week++;
     saveRaw(PROG_KEY,JSON.stringify(program));
     renderWeekBar();
     renderDay();
@@ -1006,7 +1009,18 @@ Promise.all([
     if(raw){ try{ var p=JSON.parse(raw); if(p&&typeof p==="object"&&!Array.isArray(p)) subState=p; }catch(e){} }
   }).catch(function(){}),
   loadRaw(PROG_KEY).then(function(raw){
-    if(raw){ try{ var p=JSON.parse(raw); if(p&&typeof p==="object") program=Object.assign(program,p); }catch(e){} }
+    if(raw){ try{
+      var p=JSON.parse(raw);
+      if(p&&typeof p==="object"){
+        if(typeof p.week==='number'){
+          // migrate old single-week format → apply to all days
+          var w=p.week||1,c=p.cycle||1;
+          ['upperA','lowerA','upperB','lowerB'].forEach(function(k){ program[k]={cycle:c,week:w}; });
+        } else {
+          ['upperA','lowerA','upperB','lowerB'].forEach(function(k){ if(p[k]&&typeof p[k].week==='number') program[k]=p[k]; });
+        }
+      }
+    }catch(e){} }
   }).catch(function(){})
 ]).then(function(){
   setStatus();
