@@ -82,12 +82,16 @@ function doPull(){
   var code=ensureReady(); if(!code) return Promise.resolve();
   flash("Pulling…","ok");
   return cloudGet(code).then(function(remote){
+    var localProgStr=window.HG.getProgram?JSON.stringify(window.HG.getProgram()):"";
     return window.HG.merge(remote.sessions).then(function(added){
-      var progUpdated=!!(remote.program && window.HG.applyProgram);
-      if(progUpdated) window.HG.applyProgram(remote.program);
+      var progChanged=false;
+      if(remote.program && window.HG.applyProgram){
+        var remoteProgStr=JSON.stringify(remote.program);
+        if(remoteProgStr!==localProgStr){ progChanged=true; window.HG.applyProgram(remote.program); }
+      }
       var msg=[];
       if(added>0) msg.push(added+" new workout"+(added===1?"":"s"));
-      if(progUpdated) msg.push("week state updated");
+      if(progChanged) msg.push("week state updated");
       flash(msg.length ? "Pulled — "+msg.join(", ")+"." : "Up to date — nothing new in the cloud.","ok");
       refreshStatus();
     });
