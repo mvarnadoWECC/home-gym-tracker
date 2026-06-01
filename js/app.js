@@ -380,6 +380,8 @@ function renderWeekBar(){
   var dots="";
   for(var i=1;i<=4;i++) dots+="<span class='wdot"+(i===dp.week?" cur":"")+"'></span>";
   var nextLabel=dp.week===4?"New Cycle →":"Week "+(dp.week+1)+" →";
+  var canBack=dp.week>1||dp.cycle>1;
+  var backLabel=dp.week===1?"← C"+(dp.cycle-1)+" W4":"← Week "+(dp.week-1);
   bar.innerHTML=
     "<div class='week-inner'>"+
     "<div class='week-info'>"+
@@ -389,8 +391,17 @@ function renderWeekBar(){
     "</div>"+
     "<div class='week-right'>"+
     "<div class='week-dots'>"+dots+"</div>"+
+    (canBack?"<button class='btn ghost week-back' id='weekBack'>"+backLabel+"</button>":"")+
     "<button class='btn ghost week-adv' id='weekAdv'>"+nextLabel+"</button>"+
     "</div></div>";
+  var backBtn=document.getElementById("weekBack");
+  if(backBtn) backBtn.addEventListener("click",function(){
+    var dp=program[currentDay]||(program[currentDay]={cycle:1,week:1});
+    if(dp.week===1&&dp.cycle>1){dp.cycle--;dp.week=4;} else if(dp.week>1){dp.week--;}
+    saveRaw(PROG_KEY,JSON.stringify(program));
+    renderWeekBar();
+    renderDay();
+  });
   var advBtn=document.getElementById("weekAdv");
   if(advBtn) advBtn.addEventListener("click",function(){
     var dp=program[currentDay]||(program[currentDay]={cycle:1,week:1});
@@ -953,11 +964,18 @@ window.HG={
   storageKey:SESS_KEY,
   getSessions:function(){ return sessions.slice(); },
   count:function(){ return sessions.length; },
-  // merge an incoming array of sessions into local, persist, re-render.
-  // returns a Promise resolving to the number of NEW sessions added.
   merge:function(incoming){
     var added=mergeIncoming(incoming);
     return persist().then(function(){ setStatus(); renderDay(); return added; });
+  },
+  getProgram:function(){ return program; },
+  applyProgram:function(p){
+    if(!p||typeof p!=='object') return;
+    ['upperA','lowerA','upperB','lowerB'].forEach(function(k){
+      if(p[k]&&typeof p[k].week==='number') program[k]=p[k];
+    });
+    saveRaw(PROG_KEY,JSON.stringify(program));
+    renderWeekBar();
   }
 };
 

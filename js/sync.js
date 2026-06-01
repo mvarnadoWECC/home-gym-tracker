@@ -5,9 +5,10 @@
    (see js/config.js) using a "sync code" the user shares between
    devices. The code is the only secret — anyone with it can read/write
    that bucket, which is fine for a personal workout log. Data is stored
-   in the cloud as { sessions:[...], updated:<ms> }.
+   in the cloud as { sessions:[...], program:{...}, updated:<ms> }.
 
    Merge strategy: union by session id (append-only; no data loss).
+   Program (week/cycle state) is synced as-is — last push wins.
    Deletes do NOT propagate across devices in this version — delete on
    each device, or clear the cloud bucket. See CLAUDE.md.
    Depends on window.HG (exposed by app.js) and elements in index.html.
@@ -48,20 +49,24 @@ function unionById(a,b){
   return Object.keys(byId).map(function(k){ return byId[k]; });
 }
 
-// GET current cloud sessions for a code; resolves to array ([] if none)
+// GET cloud data; resolves to {sessions:[], program:null|{}}
 function cloudGet(code){
   return fetch(api()+"/data/"+encodeURIComponent(code),{method:"GET"})
     .then(function(res){
-      if(res.status===404) return [];
+      if(res.status===404) return {sessions:[],program:null};
       if(!res.ok) throw new Error("HTTP "+res.status);
-      return res.json().then(function(j){ return Array.isArray(j)?j:(j&&j.sessions)||[]; });
+      return res.json().then(function(j){
+        var sessions=Array.isArray(j)?j:(j&&j.sessions)||[];
+        var prog=(j&&j.program&&typeof j.program==='object')?j.program:null;
+        return {sessions:sessions,program:prog};
+      });
     });
 }
-function cloudPut(code,sessions){
+function cloudPut(code,sessions,prog){
   return fetch(api()+"/data/"+encodeURIComponent(code),{
     method:"PUT",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({sessions:sessions,updated:Date.now()})
+    body:JSON.stringify({sessions:sessions,program:prog||null,updated:Date.now()})
   }).then(function(res){ if(!res.ok) throw new Error("HTTP "+res.status); return true; });
 }
 
@@ -77,7 +82,8 @@ function doPull(){
   var code=ensureReady(); if(!code) return Promise.resolve();
   flash("Pulling…","ok");
   return cloudGet(code).then(function(remote){
-    return window.HG.merge(remote).then(function(added){
+    return window.HG.merge(remote.sessions).then(function(added){
+      if(remote.program && window.HG.applyProgram) window.HG.applyProgram(remote.program);
       flash(added>0 ? ("Pulled — "+added+" new workout"+(added===1?"":"s")+" merged.") : "Up to date — nothing new in the cloud.","ok");
       refreshStatus();
     });
@@ -90,9 +96,11 @@ function doPush(){
   // pull-merge-put so we never clobber the other device's data
   return cloudGet(code).then(function(remote){
     var local=window.HG.getSessions();
-    var union=unionById(local,remote);
-    return cloudPut(code,union).then(function(){
-      return window.HG.merge(remote).then(function(added){
+    var union=unionById(local,remote.sessions);
+    var prog=window.HG.getProgram?window.HG.getProgram():null;
+    return cloudPut(code,union,prog).then(function(){
+      return window.HG.merge(remote.sessions).then(function(added){
+        if(remote.program && window.HG.applyProgram) window.HG.applyProgram(remote.program);
         flash("Synced — "+union.length+" workouts in the cloud"+(added>0?(", "+added+" pulled down"):"")+".","ok");
         refreshStatus();
       });
@@ -153,7 +161,8 @@ function render(){
     if(validCode(savedCode)){
       setTimeout(function(){
         cloudGet(savedCode).then(function(remote){
-          return window.HG.merge(remote).then(function(added){
+          return window.HG.merge(remote.sessions).then(function(added){
+            if(remote.program && window.HG.applyProgram) window.HG.applyProgram(remote.program);
             if(added>0) flash("Auto-synced — "+added+" new workout"+(added===1?"":"s")+" pulled.","ok");
             refreshStatus();
           });
